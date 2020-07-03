@@ -1,4 +1,4 @@
-import pygame, sys
+import pygame, sys, time
 
 n = 6#int(input('Dimensions of chessboard please: '))
 size = 400//n
@@ -45,7 +45,7 @@ coords = solveKT(n)
 #PyGame
 pygame.init()
 black, white, red, green, blue = (0, 0, 0), (255, 255, 255), (255, 0, 0), (0, 255, 0), (0, 0, 255)
-scW, scH = 960, 720
+scW, scH = 800, 600
 screen = pygame.display.set_mode((scW, scH))
 pygame.display.set_caption("Knight's Tour")
 pygame.mouse.set_cursor(*pygame.cursors.diamond)
@@ -61,11 +61,22 @@ class Grid:
     def __init__(self, rows, columns, blocksize):
         buffX, buffY = int((scW/2)-(((blocksize+(blocksize*0.2))*columns)/2)), int((scH/2)-(((blocksize+(blocksize*0.2))*rows)/2))
         self.boxes = [[Box(i, j, buffX, buffY, blocksize) for j in range(columns)] for i in range(rows)]
+        self.bs = blocksize
 
     def show(self):
         for line in self.boxes:
             for box in line:
                 pygame.draw.rect(screen, green, box.position, 2)
+        font = pygame.font.SysFont('comicsans', 30)
+        for i in range(n):
+            loclet = (self.boxes[n-1][i].position.centerx, self.boxes[n-1][i].position.centery+self.bs)
+            locnum = (self.boxes[i][0].position.centerx-self.bs, self.boxes[i][0].position.centery)
+            text = font.render('ABCDEFGHIJ'[i], True, white)
+            screen.blit(text, loclet)
+            text = font.render(str(n-i), True, white)
+            screen.blit(text, locnum)
+
+
     
     def generate_path(self, coords):
         self.coords = []
@@ -73,13 +84,32 @@ class Grid:
             self.coords.append(self.boxes[coordinate[0]][coordinate[1]].position.center)
     
     def draw_path(self):
-        for coord in self.coords:
-            pygame.draw.circle(screen, red, coord, 10)
-        pygame.draw.lines(screen, blue, False, self.coords, 4)
+        global solved
+        if solved == False:
+            count = 2
+            while count < len(self.coords)+1:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        sys.exit()
+
+                for coord in self.coords[:count]:
+                    pygame.draw.circle(screen, red, coord, 10)
+                pygame.draw.lines(screen, blue, False, self.coords[:count], 4)
+
+                count += 1
+                pygame.display.flip()
+                clock.tick(5)
+            solved = True
+        else:
+            for coord in self.coords:
+                pygame.draw.circle(screen, blue, coord, 10)
+            pygame.draw.lines(screen, blue, False, self.coords, 4)
+            
 
 mygrid = Grid(n, n, size)
 mygrid.generate_path(coords)
 solve = False
+solved = False
 
 while True:
     for event in pygame.event.get():
@@ -96,4 +126,4 @@ while True:
     if solve: mygrid.draw_path()
 
     pygame.display.flip()
-    clock.tick(100)
+    clock.tick(5)

@@ -8,17 +8,15 @@ pygame.display.set_caption("Sudoku Solver")
 pygame.mouse.set_cursor(*pygame.cursors.diamond)
 clock = pygame.time.Clock()
 
-class SolveGrid:
-    def __init__(self, grid):
-        self.grid = grid
-        self.coords = [(i, j) for j in range(9) for i in range(9) if self.grid[i][j] == 0]
+def solve_grid(grid):
+    coords = [(i, j) for j in range(9) for i in range(9) if grid[i][j] == 0]
 
-    def possib(self, x, y):
+    def possib(x, y):
         taken = set()
-        [taken.add(self.grid[i][y]) for i in range(9) if self.grid[i][y] != 0]
-        [taken.add(num) for num in self.grid[x] if num != 0]
+        [taken.add(grid[i][y]) for i in range(9) if grid[i][y] != 0]
+        [taken.add(num) for num in grid[x] if num != 0]
         x, y = math.floor((x)/3), math.floor((y)/3)
-        for row in self.grid[x*3:(x*3)+3]:
+        for row in grid[x*3:(x*3)+3]:
             for cell in row[y*3:(y*3)+3]:
                 if cell != 0:
                     taken.add(cell)
@@ -26,57 +24,61 @@ class SolveGrid:
         pos.difference_update(taken)
         return list(pos)
 
-    def gridfull(self):
-        for row in self.grid:
+    def gridfull():
+        for row in grid:
             for cell in row:
                 if cell == 0:
                     return False
         return True
 
-    def solve(self):
-        while not self.gridfull():
-            for i in range(len(self.coords)):
-                if len(self.possib(self.coords[i][0], self.coords[i][1])) == 1:
-                    self.grid[self.coords[i][0]][self.coords[i][1]] = self.possib(self.coords[i][0], self.coords[i][1])[0]
+    while not gridfull():
+        for i in range(len(coords)):
+            if len(possib(coords[i][0], coords[i][1])) == 1:
+                grid[coords[i][0]][coords[i][1]] = possib(coords[i][0], coords[i][1])[0]
 
-        return self.grid
+    return grid
 
-'''
-    [2, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 5, 3, 0, 0, 0, 2, 8, 0],
-    [0, 0, 0, 0, 0, 0, 3, 1, 7],
-    [6, 3, 0, 8, 0, 0, 0, 2, 4],
-    [0, 0, 8, 4, 3, 2, 7, 0, 0],
-    [7, 4, 0, 0, 0, 9, 0, 0, 3],
-    [9, 0, 7, 0, 6, 0, 0, 3, 0],
-    [8, 0, 5, 9, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 5, 7, 1, 0, 0]
-'''
+class Box:
+    def __init__(self, i, j, buffX, buffY, blocksize):
+        self.i = i
+        self.j = j
+        self.position = pygame.Rect(buffX-20+(self.j*(blocksize+(blocksize*0.2))), buffY-20+(self.i*(blocksize+(blocksize*0.2))), blocksize, blocksize)
+        if j > 2:
+            if j > 5: self.position.x += 50
+            else: self.position.x += 25
+        if i > 2:
+            if i > 5: self.position.y += 50
+            else: self.position.y += 25
+            
 
-grid = [[0]*9 for i in range(9)]
-active = [0, 0]
+class Grid:
+    def __init__(self):
+        rows = 9
+        columns = 9
+        blocksize = 50
+        self.font = pygame.font.SysFont('comicsans', 50)
+        buffX, buffY = int((scW/2)-(((blocksize+(blocksize*0.2))*columns)/2)), int((scH/2)-(((blocksize+(blocksize*0.2))*rows)/2))
+        self.boxes = [[Box(i, j, buffX, buffY, blocksize) for j in range(columns)] for i in range(rows)]
+        self.active = (0, 0)
 
-def chunkify(l):
-    return [l[i:i+9] for i in range(0, len(l), 9)]
+    def show(self):
+        for i in range(len(self.boxes)):
+            for j in range(len(self.boxes[i])):
+                if (i, j) == self.active: pygame.draw.rect(screen, green, self.boxes[i][j].position, 5)
+                else: pygame.draw.rect(screen, red, self.boxes[i][j].position, 3)
+                if data[i][j] != 0:
+                    text = self.font.render(str(data[i][j]), True, blue)
+                    loc = self.boxes[i][j].position.centerx-10, self.boxes[i][j].position.centery-15
+                    screen.blit(text, loc)
 
-def make_grid(active=active):
-    blocksize = 60
-    centers = []
-    for j in range(9):
-        for i in range(9):
-            pygame.draw.rect(screen, blue, (60+(i*blocksize), 60+(j*blocksize), blocksize, blocksize), 2)
-            centers.append((90+(i*blocksize), 90+(j*blocksize)))
-    centers = chunkify(centers)
-    pygame.draw.circle(screen, white, (centers[active[0]][active[1]][0], centers[active[0]][active[1]][1]), 20)
+    def activate(self, pos):
+        for line in self.boxes:
+            for box in line:
+                if box.position.collidepoint(pos):
+                    self.active = (box.i, box.j)
 
-    global grid
-    for i in range(len(grid)):
-        for j in range(len(grid[i])):
-            if grid[i][j] != 0:
-                font = pygame.font.SysFont('comicsans', 40)
-                text = font.render(str(grid[i][j]), True, red)
-                screen.blit(text, (centers[i][j][0]-5, centers[i][j][1]-10))
-
+mygrid = Grid()
+data = [[0 for i in range(9)] for j in range(9)]
 
 while True:
     for event in pygame.event.get():
@@ -85,32 +87,21 @@ while True:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 sys.exit()
-            elif event.key == pygame.K_LEFT and active[1] != 0:
-                active[1] -= 1
-            elif event.key == pygame.K_RIGHT and active[1] != 8:
-                active[1] += 1
-            elif event.key == pygame.K_UP and active[0] != 0:
-                active[0] -= 1
-            elif event.key == pygame.K_DOWN and active[0] != 8:
-                active[0] += 1
-
             elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0):
-                grid[active[0]][active[1]] = (event.key-48)
-
-            elif event.key == pygame.K_s:
-                mygrid = SolveGrid(grid)
-                grid = mygrid.solve()
-
+                data[mygrid.active[0]][mygrid.active[1]] = event.key-48
+            elif event.key == pygame.K_SPACE:
+                data = solve_grid(data)
             elif event.key == pygame.K_d:
                 with open('saveSudoku', 'w') as f:
-                    f.write(str(grid))
+                    f.write(str(data))
             elif event.key == pygame.K_u:
                 with open('saveSudoku') as f:
-                    grid = eval(f.read())
+                    data = eval(f.read())
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            mygrid.activate(pos)
 
     screen.fill(black)
-    
-    make_grid()
-
+    mygrid.show()
     pygame.display.flip()
     clock.tick(20)
