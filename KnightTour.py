@@ -114,7 +114,6 @@ class Grid:
         
     def draw_path(self):
         global solved
-        
         if solved == False:
             count = 2
             while count < len(self.coords)+1:
@@ -124,7 +123,7 @@ class Grid:
 
                 for coord in self.coords[:count]:
                     pygame.draw.circle(screen, red, coord, 10)
-                pygame.draw.lines(screen, blue, False, self.coords[:count], 4)
+                pygame.draw.lines(screen, blue, False, self.coords[:count], 3)
                 for i in range(len(self.textlines[:count-1])):
                     screen.blit(self.textlines[i], (700, 50+(15*i)))
 
@@ -133,9 +132,11 @@ class Grid:
                 clock.tick(5)
             solved = True
         else:
-            for coord in self.coords:
-                pygame.draw.circle(screen, blue, coord, 10)
-            pygame.draw.lines(screen, blue, False, self.coords, 4)
+            pygame.draw.lines(screen, blue, False, self.coords, 3)
+            for i, coord in enumerate(self.coords):
+                pygame.draw.circle(screen, green, coord, 12)
+                num = pygame.font.SysFont('MV Boli', 10, 5).render(str(i+1), True, black)
+                screen.blit(num, (coord[0]-5, coord[1]-10))
             for i in range(len(self.textlines)):
                 screen.blit(self.textlines[i], (700, 50+(15*i)))
             

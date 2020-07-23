@@ -13,7 +13,7 @@ class Box:
         self.position = pygame.Rect(buffX+(self.j*(blocksize+(blocksize*0.2))), buffY+(self.i*(blocksize+(blocksize*0.2))), blocksize, blocksize)
 
 class Grid:
-    def __init__(self, rows, columns, blocksize = 50):
+    def __init__(self, rows, columns, blocksize = 60):
         buffX, buffY = int((scW/2)-(((blocksize+(blocksize*0.2))*columns)/2)), int((scH/2)-(((blocksize+(blocksize*0.2))*rows)/2))
         self.boxes = [[Box(i, j, buffX, buffY, blocksize) for j in range(columns)] for i in range(rows)]
 
@@ -23,19 +23,19 @@ class Grid:
                 pygame.draw.rect(screen, white, box.position, 2)
         for i in range(len(positions)):
             if not solved:
-                pygame.draw.circle(screen, white, self.boxes[positions[i]][i].position.center, 18)
+                pygame.draw.circle(screen, white, self.boxes[positions[i]][i].position.center, 20)
             else:
-                pygame.draw.circle(screen, green, self.boxes[positions[i]][i].position.center, 18)
+                pygame.draw.circle(screen, green, self.boxes[positions[i]][i].position.center, 22)
 
 
-n = 8 #int(input())
+n = 10#int(input())
 mygrid = Grid(n, n)
 pygame.init()
 
 def get_positions(grid, solved = False):
     positions = []
-    for j in range(8):
-        for i in range(8):
+    for j in range(n):
+        for i in range(n):
             if grid[j][i] == 1:
                 positions.append(i)
 
